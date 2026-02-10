@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "db:migrate": "node dist/scripts/migrate.js",
-    "db:seed": "node dist/scripts/seed.js"
+    "db:seed": "node dist/scripts/seed.js",
+    "admin:seed": "node dist/scripts/seed-admin.js"
   },
   "keywords": [],
   "author": "",

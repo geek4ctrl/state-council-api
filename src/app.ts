@@ -4,6 +4,7 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 import authRoutes from "./routes/authRoutes";
 import postRoutes from "./routes/postRoutes";
+import usersRoutes from "./routes/usersRoutes";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/users", usersRoutes);
 
 app.use((req, res) => {
 	res.status(404).json({ message: "Route not found.", path: req.path });
