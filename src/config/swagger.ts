@@ -88,6 +88,20 @@ const swaggerDefinition = {
           role: { type: "string", enum: ["user", "admin"], example: "admin" },
         },
       },
+      UserLockUpdate: {
+        type: "object",
+        required: ["locked"],
+        properties: {
+          locked: { type: "boolean", example: true },
+        },
+      },
+      UserPasswordReset: {
+        type: "object",
+        required: ["password"],
+        properties: {
+          password: { type: "string", example: "TempPass123" },
+        },
+      },
     },
   },
   paths: {
@@ -240,6 +254,62 @@ const swaggerDefinition = {
         },
         responses: {
           "200": { description: "Role updated" },
+          "401": { description: "Unauthorized" },
+          "403": { description: "Forbidden" },
+          "404": { description: "User not found" },
+        },
+      },
+    },
+    "/api/users/{id}/lock": {
+      patch: {
+        summary: "Lock or unlock a user",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UserLockUpdate" },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "User lock updated" },
+          "401": { description: "Unauthorized" },
+          "403": { description: "Forbidden" },
+          "404": { description: "User not found" },
+        },
+      },
+    },
+    "/api/users/{id}/reset-password": {
+      post: {
+        summary: "Reset a user's password",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UserPasswordReset" },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "Password reset" },
           "401": { description: "Unauthorized" },
           "403": { description: "Forbidden" },
           "404": { description: "User not found" },
