@@ -10,6 +10,7 @@ const createTables = async (): Promise<void> => {
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'user',
+      locked BOOLEAN NOT NULL DEFAULT FALSE,
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     );
   `);
@@ -37,6 +38,10 @@ const createTables = async (): Promise<void> => {
 
   await pool.query(
     "ALTER TABLE posts ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'draft'"
+  );
+
+  await pool.query(
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS locked BOOLEAN NOT NULL DEFAULT FALSE"
   );
 
   await pool.query(

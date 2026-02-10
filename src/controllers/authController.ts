@@ -27,7 +27,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 export const login = async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body as { email: string; password: string };
   const result = await pool.query(
-    "SELECT id, email, password_hash, role FROM users WHERE email = $1",
+    "SELECT id, email, password_hash, role, locked FROM users WHERE email = $1",
     [email]
   );
 
@@ -44,6 +44,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
+  if (user.locked) {
+    res.status(403).json({ message: "Account is locked." });
+    return;
+  }
+
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     res.status(500).json({ message: "JWT secret not configured." });
@@ -56,5 +61,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     { expiresIn: "1d" }
   );
 
-  res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+  res.json({
+    token,
+    user: { id: user.id, email: user.email, role: user.role, locked: user.locked },
+  });
 };
