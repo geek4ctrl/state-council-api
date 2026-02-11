@@ -102,6 +102,31 @@ const swaggerDefinition = {
           password: { type: "string", example: "TempPass123" },
         },
       },
+      AuditLog: {
+        type: "object",
+        properties: {
+          id: { type: "integer", example: 1 },
+          actor_id: { type: "integer", example: 12 },
+          actor_email: { type: "string", example: "admin@example.com" },
+          action: { type: "string", example: "posts.created" },
+          entity_type: { type: "string", example: "post" },
+          entity_id: { type: "string", example: "42" },
+          details: { type: "object", nullable: true },
+          ip: { type: "string", example: "127.0.0.1" },
+          user_agent: { type: "string", example: "Mozilla/5.0" },
+          created_at: { type: "string", format: "date-time" },
+        },
+      },
+      AuditLogList: {
+        type: "object",
+        properties: {
+          logs: {
+            type: "array",
+            items: { $ref: "#/components/schemas/AuditLog" },
+          },
+          total: { type: "integer", example: 150 },
+        },
+      },
     },
   },
   paths: {
@@ -322,6 +347,34 @@ const swaggerDefinition = {
         security: [{ bearerAuth: [] }],
         responses: {
           "200": { description: "Users list" },
+          "401": { description: "Unauthorized" },
+          "403": { description: "Forbidden" },
+        },
+      },
+    },
+    "/api/audit": {
+      get: {
+        summary: "List audit logs",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "action", in: "query", schema: { type: "string" } },
+          { name: "entityType", in: "query", schema: { type: "string" } },
+          { name: "actorId", in: "query", schema: { type: "integer" } },
+          { name: "from", in: "query", schema: { type: "string", format: "date-time" } },
+          { name: "to", in: "query", schema: { type: "string", format: "date-time" } },
+          { name: "q", in: "query", schema: { type: "string" } },
+          { name: "limit", in: "query", schema: { type: "integer" } },
+          { name: "offset", in: "query", schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": {
+            description: "Audit logs",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/AuditLogList" },
+              },
+            },
+          },
           "401": { description: "Unauthorized" },
           "403": { description: "Forbidden" },
         },

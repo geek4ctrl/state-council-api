@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { pool } from "../config/database";
+import { logAudit } from "../utils/audit";
 
 type PostStatus = "draft" | "review" | "published";
 
@@ -171,6 +172,14 @@ export const createPost = async (
     ]
   );
 
+  await logAudit(req, {
+    actorId: authorId,
+    action: "posts.created",
+    entityType: "post",
+    entityId: result.rows[0].id,
+    details: { status: postStatus },
+  });
+
   res.status(201).json({ post: result.rows[0] });
 };
 
@@ -252,6 +261,14 @@ export const updatePost = async (
     ]
   );
 
+  await logAudit(req, {
+    actorId: user?.id ?? null,
+    action: "posts.updated",
+    entityType: "post",
+    entityId: postId,
+    details: { status: updated.rows[0]?.status },
+  });
+
   res.json({ post: updated.rows[0] });
 };
 
@@ -279,5 +296,13 @@ export const deletePost = async (
   }
 
   await pool.query("DELETE FROM posts WHERE id = $1", [postId]);
+
+  await logAudit(req, {
+    actorId: user?.id ?? null,
+    action: "posts.deleted",
+    entityType: "post",
+    entityId: postId,
+  });
+
   res.status(204).send();
 };
