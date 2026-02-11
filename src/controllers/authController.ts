@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { pool } from "../config/database";
+import { logAudit } from "../utils/audit";
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body as { email: string; password: string };
@@ -20,8 +21,17 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     "INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, role",
     [email, passwordHash]
   );
+  const createdUser = result.rows[0];
 
-  res.status(201).json({ user: result.rows[0] });
+  await logAudit(req, {
+    actorId: null,
+    action: "auth.register",
+    entityType: "user",
+    entityId: createdUser.id,
+    details: { email: createdUser.email },
+  });
+
+  res.status(201).json({ user: createdUser });
 };
 
 export const login = async (req: Request, res: Response): Promise<void> => {
@@ -60,6 +70,14 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     secret,
     { expiresIn: "1d" }
   );
+
+  await logAudit(req, {
+    actorId: user.id,
+    action: "auth.login",
+    entityType: "user",
+    entityId: user.id,
+    details: { email: user.email },
+  });
 
   res.json({
     token,

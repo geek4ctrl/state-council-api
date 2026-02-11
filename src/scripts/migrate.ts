@@ -36,6 +36,20 @@ const createTables = async (): Promise<void> => {
     );
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id SERIAL PRIMARY KEY,
+      actor_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      action TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      entity_id TEXT,
+      details JSONB,
+      ip TEXT,
+      user_agent TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+  `);
+
   await pool.query(
     "ALTER TABLE posts ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'draft'"
   );
@@ -70,6 +84,31 @@ const createTables = async (): Promise<void> => {
   );
   await pool.query(
     "ALTER TABLE posts ADD COLUMN IF NOT EXISTS show_on_registration BOOLEAN NOT NULL DEFAULT FALSE"
+  );
+
+  await pool.query(
+    "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS actor_id INTEGER"
+  );
+  await pool.query(
+    "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS action TEXT"
+  );
+  await pool.query(
+    "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS entity_type TEXT"
+  );
+  await pool.query(
+    "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS entity_id TEXT"
+  );
+  await pool.query(
+    "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS details JSONB"
+  );
+  await pool.query(
+    "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS ip TEXT"
+  );
+  await pool.query(
+    "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS user_agent TEXT"
+  );
+  await pool.query(
+    "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT NOW()"
   );
 
   await pool.query(`
