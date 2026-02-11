@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { pool } from "../config/database";
+import { logAudit } from "../utils/audit";
 
 type UserRole = "user" | "admin";
 
@@ -48,6 +49,14 @@ export const updateUserRole = async (
     [role, userId]
   );
 
+  await logAudit(req, {
+    actorId,
+    action: "users.role_updated",
+    entityType: "user",
+    entityId: userId,
+    details: { from: existing.rows[0].role, to: role },
+  });
+
   res.json({ user: updated.rows[0] });
 };
 
@@ -84,6 +93,14 @@ export const setUserLock = async (
     [locked, userId]
   );
 
+  await logAudit(req, {
+    actorId,
+    action: "users.lock_updated",
+    entityType: "user",
+    entityId: userId,
+    details: { locked },
+  });
+
   res.json({ user: updated.rows[0] });
 };
 
@@ -93,6 +110,7 @@ export const resetUserPassword = async (
 ): Promise<void> => {
   const userId = Number(req.params.id);
   const { password } = req.body as { password: string };
+  const actorId = req.user?.id ?? null;
 
   const existing = await pool.query(
     "SELECT id FROM users WHERE id = $1",
@@ -109,6 +127,13 @@ export const resetUserPassword = async (
     "UPDATE users SET password_hash = $1 WHERE id = $2",
     [passwordHash, userId]
   );
+
+  await logAudit(req, {
+    actorId,
+    action: "users.password_reset",
+    entityType: "user",
+    entityId: userId,
+  });
 
   res.json({ message: "Password reset successful." });
 };
