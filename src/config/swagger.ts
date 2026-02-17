@@ -12,6 +12,10 @@ const swaggerDefinition = {
       url: "http://localhost:3001",
       description: "Local server",
     },
+    {
+      url: "https://patient-wonder-production.up.railway.app",
+      description: "Production server (Railway)",
+    },
   ],
   components: {
     securitySchemes: {
