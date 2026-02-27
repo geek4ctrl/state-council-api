@@ -1,10 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { pool } from "../config/database";
 
 interface JwtPayload {
   userId: number;
   email: string;
   role: string;
+  sessionId?: string;
 }
 
 export const requireAuth = (
@@ -33,8 +35,44 @@ export const requireAuth = (
       id: payload.userId,
       email: payload.email,
       role: payload.role,
+      sessionId: payload.sessionId,
     };
-    next();
+
+    const sessionId = payload.sessionId;
+    if (!sessionId) {
+      next();
+      return;
+    }
+
+    void pool
+      .query(
+        `SELECT revoked_at, expires_at
+           FROM user_sessions
+          WHERE session_id = $1
+            AND user_id = $2`,
+        [sessionId, payload.userId]
+      )
+      .then((result) => {
+        const session = result.rows[0];
+        if (!session || session.revoked_at || new Date(session.expires_at) <= new Date()) {
+          res.status(401).json({ message: "Session expired." });
+          return;
+        }
+
+        pool.query(
+          `UPDATE user_sessions
+              SET last_active_at = NOW(),
+                  ip = $1,
+                  user_agent = $2
+            WHERE session_id = $3`,
+          [req.ip ?? null, req.get("user-agent") ?? null, sessionId]
+        ).catch(() => undefined);
+
+        next();
+      })
+      .catch(() => {
+        res.status(401).json({ message: "Session expired." });
+      });
   } catch (error) {
     res.status(401).json({ message: "Invalid or expired token." });
   }
@@ -66,6 +104,7 @@ export const optionalAuth = (
       id: payload.userId,
       email: payload.email,
       role: payload.role,
+      sessionId: payload.sessionId,
     };
   } catch (_error) {
     // Ignore invalid tokens for optional auth.

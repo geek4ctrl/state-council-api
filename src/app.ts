@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes";
 import postRoutes from "./routes/postRoutes";
 import usersRoutes from "./routes/usersRoutes";
 import auditRoutes from "./routes/auditRoutes";
+import sessionsRoutes from "./routes/sessionsRoutes";
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/audit", auditRoutes);
+app.use("/api/sessions", sessionsRoutes);
 
 app.use((req, res) => {
 	res.status(404).json({ message: "Route not found.", path: req.path });

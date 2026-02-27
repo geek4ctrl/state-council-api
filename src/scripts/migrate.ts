@@ -50,6 +50,23 @@ const createTables = async (): Promise<void> => {
     );
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS user_sessions (
+      id SERIAL PRIMARY KEY,
+      session_id TEXT UNIQUE NOT NULL,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      refresh_token_hash TEXT NOT NULL,
+      device_label TEXT,
+      user_agent TEXT,
+      ip TEXT,
+      location TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      last_active_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      revoked_at TIMESTAMP,
+      expires_at TIMESTAMP NOT NULL
+    );
+  `);
+
   await pool.query(
     "ALTER TABLE posts ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'draft'"
   );
@@ -109,6 +126,47 @@ const createTables = async (): Promise<void> => {
   );
   await pool.query(
     "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT NOW()"
+  );
+
+  await pool.query(
+    "ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS session_id TEXT"
+  );
+  await pool.query(
+    "ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS user_id INTEGER"
+  );
+  await pool.query(
+    "ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS refresh_token_hash TEXT"
+  );
+  await pool.query(
+    "ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS device_label TEXT"
+  );
+  await pool.query(
+    "ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS user_agent TEXT"
+  );
+  await pool.query(
+    "ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS ip TEXT"
+  );
+  await pool.query(
+    "ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS location TEXT"
+  );
+  await pool.query(
+    "ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT NOW()"
+  );
+  await pool.query(
+    "ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMP NOT NULL DEFAULT NOW()"
+  );
+  await pool.query(
+    "ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMP"
+  );
+  await pool.query(
+    "ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP"
+  );
+
+  await pool.query(
+    "CREATE INDEX IF NOT EXISTS user_sessions_user_id_idx ON user_sessions (user_id)"
+  );
+  await pool.query(
+    "CREATE INDEX IF NOT EXISTS user_sessions_session_id_idx ON user_sessions (session_id)"
   );
 
   await pool.query(`
